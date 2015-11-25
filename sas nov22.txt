@@ -1,0 +1,167 @@
+
+https://github.com/ya15/comparision-logistic-reg-and-KNN
+
+
+proc import out=scotia96
+datafile="c:\users\............\sdata96.csv"
+dbms=csv replace;
+run;
+
+
+
+
+
+ODS Listing Close;
+ODS PDF FILE='data summary';
+proc contents data=scotia96 out=contents ;
+run;
+ODS PDF Close;
+ODS Listing; 
+
+
+
+
+ODS Listing Close;
+ODS PDF FILE='ods-univariate.pdf';
+ proc univariate data=scotia96;
+ title1 'Creating PDF Output with ODS';
+   var open	close	high	low	volume	onedaychgnet	twochgnet	twohmovavg	fiftydaymovavg	onehmovavg	twentydmovavg	thirtydaymovavg	tendaymoveavg	fivedaymovavg	sixtydaymovavg	fortydaymovavg	onehtwentymovavg	volatilitytenday	twohvolatility	bac	bmo	rbc	td	sptsx	spx	sh	nikkei	hs	oil	brasil	usdcad	usdcny	usdjpy
+;
+	histogram open	close	high	low	volume	onedaychgnet	twochgnet	twohmovavg	fiftydaymovavg	onehmovavg	twentydmovavg	thirtydaymovavg	tendaymoveavg	fivedaymovavg	sixtydaymovavg	fortydaymovavg	onehtwentymovavg	volatilitytenday	twohvolatility	bac	bmo	rbc	td	sptsx	spx	sh	nikkei	hs	oil	brasil	usdcad	usdcny	usdjpy
+/normal(mu=est sigma=est);
+ run;
+ODS PDF Close;
+ODS Listing; 
+
+
+
+
+
+
+
+ODS Listing Close;
+ODS PDF FILE='Corr variables Xs.pdf';
+ proc corr data=scotia96
+   plots(only)=scatter(nvar=all ellipse=none);
+   title 'corr all variables Xs';
+   var open	close	high	low	volume	onedaychgnet	twochgnet	twohmovavg	fiftydaymovavg	onehmovavg	twentydmovavg	thirtydaymovavg	tendaymoveavg	fivedaymovavg	sixtydaymovavg	fortydaymovavg	onehtwentymovavg	volatilitytenday	twohvolatility	bac	bmo	rbc	td	sptsx	spx	sh	nikkei	hs	oil	brasil	usdcad	usdcny	usdjpy
+;
+   
+   run;
+ODS PDF Close;
+ODS Listing; 
+
+
+
+
+ODS Listing Close;
+ODS PDF FILE='Corr independend Xs with dependent Y.pdf';
+ proc corr data=scotia96
+   plots(only)=scatter(nvar=all ellipse=none);
+   title 'corr independent with dependent Y';
+   var open	close	high	low	volume	onedaychgnet	twochgnet	twohmovavg	fiftydaymovavg	onehmovavg	twentydmovavg	thirtydaymovavg	tendaymoveavg	fivedaymovavg	sixtydaymovavg	fortydaymovavg	onehtwentymovavg	volatilitytenday	twohvolatility	bac	bmo	rbc	td	sptsx	spx	sh	nikkei	hs	oil	brasil	usdcad	usdcny	usdjpy
+;
+   with trend;
+   run;
+ODS PDF Close;
+ODS Listing; 
+
+
+
+
+
+
+
+
+
+
+
+ODS Listing Close;
+ODS PDF FILE='Reg stepwise.pdf';
+ title 'stepwise Regression on 5 day trend scotia';
+proc logistic data=scotia96 descending outest=betas covout;
+model trend=open	close	high	low	volume	onedaychgnet	twochgnet	twohmovavg	fiftydaymovavg	onehmovavg	twentydmovavg	thirtydaymovavg	tendaymoveavg	fivedaymovavg	sixtydaymovavg	fortydaymovavg	onehtwentymovavg	volatilitytenday	twohvolatility	bac	bmo	rbc	td	sptsx	spx	sh	nikkei	hs	oil	brasil	usdcad	usdcny	usdjpy
+/ selection=stepwise
+slentry=0.3
+slstay=0.35
+details
+lackfit;
+output out=pred p=phat lower=lcl upper=ucl
+predprobs=(individual crossvalidate);
+run;
+ODS PDF Close;
+ODS Listing; 
+
+
+
+
+
+
+ODS Listing Close;
+ODS PDF FILE='Reg ROC.pdf';
+ title 'Regression 5 day trend scotia';
+proc logistic data=scotia96  plots=EFFECT plots=ROC;
+model trend=open	close	high	low	volume	onedaychgnet	twochgnet	twohmovavg	fiftydaymovavg	onehmovavg	twentydmovavg	thirtydaymovavg	tendaymoveavg	fivedaymovavg	sixtydaymovavg	fortydaymovavg	onehtwentymovavg	volatilitytenday	twohvolatility	bac	bmo	rbc	td	sptsx	spx	sh	nikkei	hs	oil	brasil	usdcad	usdcny	usdjpy
+/ outroc = rocout;
+output out=estimated predicted=estprob l=lower95 u=upper95;
+run;
+
+ODS PDF Close;
+ODS Listing; 
+
+
+
+
+
+title 'Stepwise Regression on Scotia 5 day trend Data';
+   proc logistic data=scotia96 descending outest=betas covout;
+      model trend=open	close	high	low	volume	onedaychgnet	twochgnet	twohmovavg	fiftydaymovavg	onehmovavg	twentydmovavg	thirtydaymovavg	tendaymoveavg	fivedaymovavg	sixtydaymovavg	fortydaymovavg	onehtwentymovavg	volatilitytenday	twohvolatility	bac	bmo	rbc	td	sptsx	spx	sh	nikkei	hs	oil	brasil	usdcad	usdcny	usdjpy
+/ selection=stepwise
+                     slentry=0.3
+                     slstay=0.35
+                     details
+                     lackfit;
+      output out=pred p=phat lower=lcl upper=ucl
+             predprobs=(individual crossvalidate);
+   run;
+   proc print data=betas;
+      title2 'Parameter Estimates and Covariance Matrix';
+   run;
+   proc print data=pred;
+      title2 'Predicted Probabilities and 95% Confidence Limits';
+   run;
+   proc freq data=pred;
+   tables _FROM_*_INTO_;
+   run;
+
+
+
+
+
+
+ODS Listing Close;
+ODS PDF FILE='Reg result.pdf';
+
+title 'Stepwise Regression on Scotia 5 day trend Data';
+   proc logistic data=scotia96 descending outest=betas covout;
+      model trend=open	close	high	low	volume	onedaychgnet	twochgnet	twohmovavg	fiftydaymovavg	onehmovavg	twentydmovavg	thirtydaymovavg	tendaymoveavg	fivedaymovavg	sixtydaymovavg	fortydaymovavg	onehtwentymovavg	volatilitytenday	twohvolatility	bac	bmo	rbc	td	sptsx	spx	sh	nikkei	hs	oil	brasil	usdcad	usdcny	usdjpy
+/ selection=stepwise
+                     slentry=0.3
+                     slstay=0.35
+                     details
+                     lackfit;
+      output out=pred p=phat lower=lcl upper=ucl
+             predprobs=(individual crossvalidate);
+   run;
+   proc print data=betas;
+      title2 'Parameter Estimates and Covariance Matrix';
+   run;
+   proc print data=pred;
+      title2 'Predicted Probabilities and 95% Confidence Limits';
+   run;
+   proc freq data=pred;
+   tables _FROM_*_INTO_;
+   run;
+
+ODS PDF Close;
+ODS Listing; 
